@@ -24,20 +24,28 @@ const robotoMono = localFont({
 });
 
 export const metadata = {
-  title: 'Nextbase Open source starter',
-  description: 'Built with Next.js, Supabase, and Tailwind CSS',
+  title: 'JobMatchAI — AI-Powered Job Search',
+  description: 'Automate your job search with custom scoring rules, CV analysis, and real-time job matches.',
 };
 
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, getLocale } from 'next-intl/server';
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const messages = await getMessages();
+  const locale = await getLocale();
+
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${robotoMono.variable}`}>
+    <html lang={locale} suppressHydrationWarning className={`${inter.variable} ${robotoMono.variable}`}>
       <head />
       <body>
-        <DynamicLayoutProviders>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </DynamicLayoutProviders>
+        <NextIntlClientProvider messages={messages}>
+          <DynamicLayoutProviders>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </DynamicLayoutProviders>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

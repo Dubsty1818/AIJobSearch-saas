@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ModeToggle } from '@/components/ui/mode-toggle';
+import { LanguageToggle } from '@/components/ui/language-toggle';
 
 export default function Navbar() {
   return (
@@ -17,6 +18,7 @@ export default function Navbar() {
           </nav>
         </div>
         <div className="flex items-center gap-2">
+          <LanguageToggle />
           <ModeToggle />
           <Button asChild variant="ghost" size="sm">
             <Link href="/login">Sign in</Link>

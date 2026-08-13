@@ -7,103 +7,169 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.15"
+  }
   public: {
     Tables: {
-      content_blog_post_comments: {
+      job_matches: {
         Row: {
-          author_id: string
-          blog_post_id: string
-          body: string
+          analysis: string | null
+          company_name: string
           created_at: string
+          date: string
+          expected_salary: string | null
           id: string
-          updated_at: string
+          job_description: string
+          job_title: string
+          location: string | null
+          platform: string
+          reasoning: string | null
+          score: number | null
+          search_keywords: string
+          url: string
+          user_id: string
+          employer_image_url: string | null
+          contract_type: string | null
+          time_ago: string | null
+          min_salary: number | null
+          max_salary: number | null
+          salary_period: string | null
+          job_publisher: string | null
+          is_remote: boolean | null
+          job_benefits: Json | null
+          status: string | null
         }
         Insert: {
-          author_id: string
-          blog_post_id: string
-          body: string
+          analysis?: string | null
+          company_name?: string
           created_at?: string
+          date?: string
+          expected_salary?: string | null
           id?: string
-          updated_at?: string
+          job_description?: string
+          job_title?: string
+          location?: string | null
+          platform?: string
+          reasoning?: string | null
+          score?: number | null
+          search_keywords?: string
+          url?: string
+          user_id: string
+          employer_image_url?: string | null
+          contract_type?: string | null
+          time_ago?: string | null
+          min_salary?: number | null
+          max_salary?: number | null
+          salary_period?: string | null
+          job_publisher?: string | null
+          is_remote?: boolean | null
+          job_benefits?: Json | null
+          status?: string | null
         }
         Update: {
-          author_id?: string
-          blog_post_id?: string
-          body?: string
+          analysis?: string | null
+          company_name?: string
           created_at?: string
+          date?: string
+          expected_salary?: string | null
           id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "content_blog_post_comments_blog_post_id_fkey"
-            columns: ["blog_post_id"]
-            isOneToOne: false
-            referencedRelation: "content_blog_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      content_blog_posts: {
-        Row: {
-          author_id: string
-          body: string
-          created_at: string
-          excerpt: string | null
-          id: string
-          is_published: boolean
-          published_at: string | null
-          slug: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          author_id: string
-          body: string
-          created_at?: string
-          excerpt?: string | null
-          id?: string
-          is_published?: boolean
-          published_at?: string | null
-          slug: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string
-          body?: string
-          created_at?: string
-          excerpt?: string | null
-          id?: string
-          is_published?: boolean
-          published_at?: string | null
-          slug?: string
-          title?: string
-          updated_at?: string
+          job_description?: string
+          job_title?: string
+          location?: string | null
+          platform?: string
+          reasoning?: string | null
+          score?: number | null
+          search_keywords?: string
+          url?: string
+          user_id?: string
+          employer_image_url?: string | null
+          contract_type?: string | null
+          time_ago?: string | null
+          min_salary?: number | null
+          max_salary?: number | null
+          salary_period?: string | null
+          job_publisher?: string | null
+          is_remote?: boolean | null
+          job_benefits?: Json | null
+          status?: string | null
         }
         Relationships: []
       }
-      private_items: {
+      search_history: {
         Row: {
           created_at: string
-          description: string
           id: string
-          name: string
-          owner_id: string | null
+          keywords: string
+          search_limit: number
+          user_id: string
         }
         Insert: {
           created_at?: string
-          description: string
           id?: string
-          name: string
-          owner_id?: string | null
+          keywords: string
+          search_limit?: number
+          user_id: string
         }
         Update: {
           created_at?: string
-          description?: string
           id?: string
-          name?: string
-          owner_id?: string | null
+          keywords?: string
+          search_limit?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          custom_rules: Json
+          cv_text: string
+          free_searches_remaining: number | null
+          id: string
+          max_score_limit: number | null
+          quota_reset_at: string
+          setup_completed: boolean
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string
+          target_keywords: string
+          updated_at: string
+          monthly_quota: number
+        }
+        Insert: {
+          created_at?: string
+          custom_rules?: Json
+          cv_text?: string
+          free_searches_remaining?: number | null
+          id: string
+          max_score_limit?: number | null
+          quota_reset_at?: string
+          setup_completed?: boolean
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string
+          target_keywords?: string
+          updated_at?: string
+          monthly_quota?: number
+        }
+        Update: {
+          created_at?: string
+          custom_rules?: Json
+          cv_text?: string
+          free_searches_remaining?: number | null
+          id?: string
+          max_score_limit?: number | null
+          quota_reset_at?: string
+          setup_completed?: boolean
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string
+          target_keywords?: string
+          updated_at?: string
+          monthly_quota?: number
         }
         Relationships: []
       }
@@ -245,4 +311,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

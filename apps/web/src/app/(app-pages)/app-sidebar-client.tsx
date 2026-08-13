@@ -12,10 +12,12 @@ import {
 import { SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail } from "@/components/ui/sidebar";
 import { signOutAction } from "@/data/auth/sign-out";
 import { User } from "@supabase/supabase-js";
-import { ChevronUp, Home, Lock, LogOut, Settings } from "lucide-react";
+import { ChevronUp, Home, Briefcase, Sliders, Settings, LogOut, Sparkles, Gauge } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTransition } from "react";
+import { Progress } from "@/components/ui/progress";
+
 const navigationItems: { title: string; url: string; icon: React.ElementType }[] = [
   {
     title: 'Dashboard',
@@ -23,15 +25,34 @@ const navigationItems: { title: string; url: string; icon: React.ElementType }[]
     icon: Home,
   },
   {
-    title: 'Private Items',
-    url: '/private-items',
-    icon: Lock,
+    title: 'Profile & Search',
+    url: '/profile',
+    icon: Briefcase,
+  },
+  {
+    title: 'Job Matches',
+    url: '/job-matches',
+    icon: Briefcase,
+  },
+  {
+    title: 'Scoring Rules',
+    url: '/rules',
+    icon: Sliders,
+  },
+  {
+    title: 'Settings',
+    url: '/settings',
+    icon: Settings,
   },
 ];
 
+interface AppSidebarContentProps {
+  user: User;
+  remainingQuota?: number;
+  subscriptionStatus?: string;
+}
 
-
-export function AppSidebarContent({ user }: { user: User }) {
+export function AppSidebarContent({ user, remainingQuota = 500, subscriptionStatus = 'inactive' }: AppSidebarContentProps) {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
@@ -45,17 +66,21 @@ export function AppSidebarContent({ user }: { user: User }) {
   const userName = user?.user_metadata?.name || user.email?.split('@')[0];
   const userInitials = userName
     .split(' ')
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
+
+  const maxQuota = subscriptionStatus === 'active' ? 500 : 50;
+  const quotaPercent = Math.round((remainingQuota / maxQuota) * 100);
+
   return <><SidebarContent>
     <SidebarGroup>
       <SidebarGroupLabel>Navigation</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {navigationItems.map((item) => {
-            const isActive = pathname === item.url;
+            const isActive = pathname === item.url || pathname.startsWith(item.url + '/');
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.title}>
@@ -69,6 +94,31 @@ export function AppSidebarContent({ user }: { user: User }) {
             );
           })}
         </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+
+    {/* Quota Display */}
+    <SidebarGroup>
+      <SidebarGroupLabel>{subscriptionStatus === 'active' ? 'Monthly Quota' : 'Free Searches'}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <div className="px-2 py-2 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Remaining</span>
+            <span className="font-medium">{remainingQuota} / {maxQuota}</span>
+          </div>
+          <Progress value={quotaPercent} className="h-1.5" />
+          {subscriptionStatus === 'active' ? (
+            <div className="flex items-center gap-1 text-xs text-emerald-500">
+              <Sparkles className="h-3 w-3" />
+              Pro Plan Active
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 text-xs text-amber-500">
+              <Gauge className="h-3 w-3" />
+              No Active Plan
+            </div>
+          )}
+        </div>
       </SidebarGroupContent>
     </SidebarGroup>
   </SidebarContent>
@@ -117,9 +167,11 @@ export function AppSidebarContent({ user }: { user: User }) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} disabled={isPending}>

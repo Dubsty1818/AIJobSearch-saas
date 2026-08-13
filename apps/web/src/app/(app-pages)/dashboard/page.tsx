@@ -1,17 +1,47 @@
-import { getUserPrivateItems } from '@/data/anon/privateItems';
-import { Suspense } from 'react';
-import { DashboardHeading } from './dashboard-heading';
-import { DashboardListSkeleton } from './dashboard-list-skeleton';
-import { DashboardPrivateItemsSection } from './dashboard-private-items-section';
+import { getUserProfile } from '@/data/user/profile';
+import { getSearchHistory } from '@/data/user/search';
+import { DashboardClientPage } from './DashboardClient';
 
-export default function DashboardPage() {
-  const privateItemsPromise = getUserPrivateItems();
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ setup?: string }>;
+}) {
+  const params = await searchParams;
+
+  let profile;
+  try {
+    profile = await getUserProfile();
+  } catch {
+    // Profile might not exist yet (race condition with trigger)
+    // Return a loading state
+    return (
+      <div className="flex flex-1 items-center justify-center p-6">
+        <p className="text-muted-foreground">Loading your profile...</p>
+      </div>
+    );
+  }
+
+  let searchHistory;
+  try {
+    searchHistory = await getSearchHistory();
+  } catch {
+    searchHistory = [];
+  }
+
+  // Determine initial wizard step from URL params
+  let initialSetupStep: number | undefined;
+  if (params.setup === 'continue') {
+    initialSetupStep = 1; // Skip to CV step after payment
+  } else if (params.setup === 'payment') {
+    initialSetupStep = 0;
+  }
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-      <DashboardHeading />
-      <Suspense fallback={<DashboardListSkeleton />}>
-        <DashboardPrivateItemsSection privateItemsPromise={privateItemsPromise} />
-      </Suspense>
-    </div>
+    <DashboardClientPage
+      profile={profile}
+      searchHistory={searchHistory}
+      initialSetupStep={initialSetupStep}
+    />
   );
 }

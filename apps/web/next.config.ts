@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next';
 
 const config: NextConfig = {
-  cacheComponents: true,
   images: {
     remotePatterns: [
       {
@@ -26,4 +25,8 @@ const config: NextConfig = {
   },
 };
 
-export default config;
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
+export default withNextIntl(config);

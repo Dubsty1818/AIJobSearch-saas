@@ -1,0 +1,51 @@
+{
+  "Dashboard": {
+    "title": "Dashboard",
+    "subtitle": "KI-gestützte Job-Vermittlung direkt auf Knopfdruck.",
+    "live": "Live",
+    "connecting": "Verbinden...",
+    "totalMatches": "Gesamte Treffer",
+    "avgScore": "Durchschnitt",
+    "monthlyQuotaLeft": "Monatliches Kontingent",
+    "freeSearchesLeft": "Freie Suchen übrig",
+    "analyzing": "KI analysiert Jobs... Ergebnisse erscheinen in Echtzeit unten."
+  },
+  "SearchControls": {
+    "placeholder": "Suchbegriffe eingeben...",
+    "maxResults": "Maximale Ergebnisse:",
+    "processingQueue": "Warteschlange wird bearbeitet...",
+    "searching": "Suchen...",
+    "runSearch": "Suche starten"
+  },
+  "RulesConfigurator": {
+    "title": "Bewertungsregeln",
+    "subtitle": "Konfigurieren Sie, wie die KI die Job-Matches bewertet.",
+    "examplesTitle": "Beispiele für gute Regeln",
+    "examplesContent": "Verwenden Sie spezifische Bedingungen. Beispiel: '+3 Punkte: Wenn Mentoring erwähnt wird.' Vermeiden Sie vage Regeln wie '+2 Punkte: Wenn es ein guter Job ist.'",
+    "conflictTitle": "Widersprüchliche Regeln",
+    "conflictContent": "Achten Sie darauf, dass sich Ihre Regeln nicht widersprechen. Wenn Sie +5 für Remote und +5 für Büro geben, wird die KI verwirrt."
+  },
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "rules": "Bewertungsregeln",
+    "profile": "Profil & Einstellungen",
+    "darkMode": "Dunkelmodus",
+    "lightMode": "Hellmodus"
+  },
+  "Settings": {
+    "title": "Einstellungen",
+    "description": "Verwalten Sie Ihre Einstellungen, Abrechnungen und Kontoeinstellungen.",
+    "preferences": "Präferenzen",
+    "billing": "Abrechnung",
+    "appearance": "Erscheinungsbild",
+    "appearanceDesc": "Passen Sie das Aussehen der App an.",
+    "language": "Sprache",
+    "languageDesc": "Wählen Sie Ihre bevorzugte Sprache für die Benutzeroberfläche.",
+    "lightMode": "Heller Modus",
+    "darkMode": "Dunkler Modus",
+    "system": "System",
+    "english": "English (EN)",
+    "german": "Deutsch (DE)",
+    "signOut": "Abmelden"
+  }
+}
