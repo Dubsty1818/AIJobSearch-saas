@@ -5,7 +5,7 @@ import { RulesConfigurator, type Rule } from '@/components/rules/RulesConfigurat
 import { updateCustomRulesAction, updateMaxScoreLimitAction } from '@/data/user/profile';
 import { Sliders } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
+
 
 import { ContextualSidebar } from '@/components/dashboard/ContextualSidebar';
 
@@ -15,7 +15,6 @@ interface RulesPageClientProps {
 }
 
 export function RulesPageClient({ initialRules, initialMaxScoreLimit }: RulesPageClientProps) {
-  const t = useTranslations('RulesConfigurator');
   const [maxScoreLimit, setMaxScoreLimit] = useState(initialMaxScoreLimit);
 
   const handleRulesChange = useCallback(async (rules: Rule[]) => {
@@ -40,14 +39,14 @@ export function RulesPageClient({ initialRules, initialMaxScoreLimit }: RulesPag
 
   const sidebarItems = [
     {
-      title: t('examplesTitle'),
+      title: 'Examples',
       type: 'tip' as const,
-      content: t('examplesContent')
+      content: 'E.g. Must have Next.js experience (+3), No remote work (-5)'
     },
     {
-      title: t('conflictTitle'),
+      title: 'Conflicts',
       type: 'warning' as const,
-      content: t('conflictContent')
+      content: 'Avoid creating rules that contradict each other.'
     }
   ];
 
@@ -60,14 +59,14 @@ export function RulesPageClient({ initialRules, initialMaxScoreLimit }: RulesPag
             <Sliders className="h-5 w-5 text-violet-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Scoring Rules</h1>
             <p className="text-muted-foreground text-sm">
-              {t('subtitle')}
+              Define how the AI should score and rank job matches.
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 p-6">
+        <div className="rounded-xl border shadow-sm bg-card p-6">
           <RulesConfigurator
             initialRules={initialRules}
             onRulesChange={handleRulesChange}

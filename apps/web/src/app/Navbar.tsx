@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ModeToggle } from '@/components/ui/mode-toggle';
-import { LanguageToggle } from '@/components/ui/language-toggle';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import Link from 'next/link';
+
 
 export default function Navbar() {
   return (
@@ -9,7 +9,7 @@ export default function Navbar() {
       <div className="container flex h-14 max-w-screen-2xl items-center mx-auto px-4">
         <div className="flex items-center gap-6 flex-1">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <span className="text-primary">Nextbase</span>
+            <span className="text-primary">JobSearchAI</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <Link href="/about" className="text-muted-foreground transition-colors hover:text-foreground">
@@ -18,8 +18,8 @@ export default function Navbar() {
           </nav>
         </div>
         <div className="flex items-center gap-2">
-          <LanguageToggle />
-          <ModeToggle />
+
+          <ThemeToggle />
           <Button asChild variant="ghost" size="sm">
             <Link href="/login">Sign in</Link>
           </Button>

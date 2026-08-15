@@ -1,7 +1,8 @@
 import '@/styles/globals.css';
 import localFont from 'next/font/local';
-import { DynamicLayoutProviders } from './DynamicLayoutProviders';
 import { ClientLayout } from './ClientLayout';
+import { DynamicLayoutProviders } from './DynamicLayoutProviders';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const inter = localFont({
   src: [
@@ -28,24 +29,20 @@ export const metadata = {
   description: 'Automate your job search with custom scoring rules, CV analysis, and real-time job matches.',
 };
 
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, getLocale } from 'next-intl/server';
+
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const messages = await getMessages();
-  const locale = await getLocale();
-
   return (
-    <html lang={locale} suppressHydrationWarning className={`${inter.variable} ${robotoMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${robotoMono.variable}`}>
       <head />
       <body>
-        <NextIntlClientProvider messages={messages}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <DynamicLayoutProviders>
             <ClientLayout>
               {children}
             </ClientLayout>
           </DynamicLayoutProviders>
-        </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

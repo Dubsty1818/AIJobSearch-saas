@@ -37,6 +37,41 @@ export const signUpAction = actionClient
     return data;
   });
 
+const signUpEmailOnlySchema = z.object({
+  email: z.string().email(),
+});
+
+/**
+ * Signs up a new user using ONLY their email. A random password is generated.
+ * @param {Object} params - The parameters for sign up.
+ * @param {string} params.email - The user's email address.
+ * @throws {Error} If there's an error or if the email is already in use.
+ */
+export const signUpEmailOnlyAction = actionClient
+  .schema(signUpEmailOnlySchema)
+  .action(async ({ parsedInput: { email } }) => {
+    const supabase = await createSupabaseClient();
+    const randomPassword = crypto.randomUUID();
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: randomPassword,
+      options: {
+        emailRedirectTo: toSiteURL('/auth/verify?type=signup'),
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    
+    // In Supabase, if the user already exists but hasn't confirmed their email, it might not throw an error unless configured to do so.
+    // However, if they exist and are confirmed, signUp with a new password throws "User already registered" (Status 400).
+    
+    return data;
+  });
+
+
 const signInSchema = z.object({
   email: z.string().email(),
   password: z.string(),

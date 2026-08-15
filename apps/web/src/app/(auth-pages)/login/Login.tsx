@@ -21,6 +21,7 @@ import { useAction } from 'next-safe-action/hooks';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useCooldown } from '@/hooks/useCooldown';
 
 export function Login({
   next,
@@ -32,6 +33,7 @@ export function Login({
   >(null);
   const [redirectInProgress, setRedirectInProgress] = useState(false);
   const toastRef = useRef<string | number | undefined>(undefined);
+  const { isCooldownActive, startCooldown } = useCooldown(5000);
 
   const router = useRouter();
 
@@ -47,6 +49,7 @@ export function Login({
     signInWithMagicLinkAction,
     {
       onExecute: () => {
+        startCooldown();
         toastRef.current = toast.loading('Sending magic link...');
       },
       onSuccess: () => {
@@ -73,6 +76,7 @@ export function Login({
     signInWithPasswordAction,
     {
       onExecute: () => {
+        startCooldown();
         toastRef.current = toast.loading('Logging in...');
       },
       onSuccess: () => {
@@ -100,6 +104,7 @@ export function Login({
     signInWithProviderAction,
     {
       onExecute: () => {
+        startCooldown();
         toastRef.current = toast.loading('Requesting login...');
       },
       onSuccess: (payload) => {
@@ -153,7 +158,7 @@ export function Login({
                 </CardHeader>
                 <CardContent className="space-y-2 p-0">
                   <EmailAndPassword
-                    isLoading={passwordStatus === 'executing'}
+                    isLoading={passwordStatus === 'executing' || isCooldownActive}
                     onSubmit={(data) => {
                       executePassword({
                         email: data.email,
@@ -177,7 +182,7 @@ export function Login({
                 <CardContent className="space-y-2 p-0">
                   <Email
                     onSubmit={(email) => executeMagicLink({ email, next })}
-                    isLoading={magicLinkStatus === 'executing'}
+                    isLoading={magicLinkStatus === 'executing' || isCooldownActive}
                     view="sign-in"
                   />
                 </CardContent>
@@ -194,7 +199,7 @@ export function Login({
                 <CardContent className="space-y-2 p-0">
                   <RenderProviders
                     providers={['google', 'github', 'twitter']}
-                    isLoading={providerStatus === 'executing'}
+                    isLoading={providerStatus === 'executing' || isCooldownActive}
                     onProviderLoginRequested={(
                       provider: 'google' | 'github' | 'twitter'
                     ) => executeProvider({ provider, next })}

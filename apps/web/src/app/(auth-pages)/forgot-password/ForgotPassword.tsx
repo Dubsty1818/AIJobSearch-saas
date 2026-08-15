@@ -45,12 +45,14 @@ export function ForgotPassword(): JSX.Element {
           resetSuccessMessage={setSuccessMessage}
         />
       ) : (
-        <Card className="container h-full grid items-center text-left max-w-lg mx-auto overflow-auto">
-          <div className="space-y-4">
-            <T.H4>Forgot Password</T.H4>
-            <T.P className="text-muted-foreground">
-              Enter your email to receive a Magic Link to reset your password.
-            </T.P>
+        <div className="container flex items-center justify-center text-left max-w-lg mx-auto min-h-[470px]">
+          <div className="space-y-8 bg-background p-8 rounded-lg shadow-sm dark:border w-full">
+            <div className="space-y-2">
+              <T.H4>Forgot Password</T.H4>
+              <T.P className="text-muted-foreground text-sm">
+                Enter your email to receive a Magic Link to reset your password.
+              </T.P>
+            </div>
 
             <Email
               onSubmit={(email) => {
@@ -60,7 +62,7 @@ export function ForgotPassword(): JSX.Element {
               view="forgot-password"
             />
           </div>
-        </Card>
+        </div>
       )}
     </>
   );

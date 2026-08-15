@@ -118,3 +118,28 @@ export const updateMaxScoreLimitAction = authActionClient
     return { success: true };
   });
 
+// ── Log System Metrics & DAU ────────────────────────────────────────
+
+const metricSchema = z.object({
+  metricName: z.enum(['wizard_completions', 'searches_run']),
+});
+
+export const incrementDailyMetricAction = authActionClient
+  .schema(metricSchema)
+  .action(async ({ parsedInput: { metricName }, ctx: { userId } }) => {
+    const supabase = await createSupabaseClient();
+    
+    // Log Active User for DAU
+    const { error: dauError } = await supabase.rpc('log_active_user', { uid: userId });
+    if (dauError) console.warn('Failed to log active user:', dauError);
+
+    // Increment Metric
+    const { error } = await supabase.rpc('increment_daily_metric', { metric_name: metricName });
+      
+    if (error) {
+      console.warn('Failed to increment metric:', error);
+    }
+    
+    return { success: true };
+  });
+

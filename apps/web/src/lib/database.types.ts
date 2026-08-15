@@ -138,6 +138,7 @@ export type Database = {
           target_keywords: string
           updated_at: string
           monthly_quota: number
+          role: string | null
         }
         Insert: {
           created_at?: string
@@ -154,6 +155,7 @@ export type Database = {
           target_keywords?: string
           updated_at?: string
           monthly_quota?: number
+          role?: string | null
         }
         Update: {
           created_at?: string
@@ -170,7 +172,20 @@ export type Database = {
           target_keywords?: string
           updated_at?: string
           monthly_quota?: number
+          role?: string | null
         }
+        Relationships: []
+      }
+      daily_active_users: {
+        Row: { date: string; user_id: string }
+        Insert: { date?: string; user_id: string }
+        Update: { date?: string; user_id?: string }
+        Relationships: []
+      }
+      daily_metrics: {
+        Row: { date: string; searches_run: number; wizard_completions: number }
+        Insert: { date?: string; searches_run?: number; wizard_completions?: number }
+        Update: { date?: string; searches_run?: number; wizard_completions?: number }
         Relationships: []
       }
     }
@@ -178,7 +193,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_daily_metric: {
+        Args: { metric_name: string }
+        Returns: undefined
+      }
+      log_active_user: {
+        Args: { uid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

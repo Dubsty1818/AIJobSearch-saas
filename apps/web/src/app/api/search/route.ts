@@ -24,11 +24,18 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { search_keywords, search_limit = 10 } = body;
-    const limit = search_limit;
+    let limit = search_limit;
 
-    if (!search_keywords || typeof search_keywords !== 'string') {
+    if (!search_keywords || typeof search_keywords !== 'string' || search_keywords.trim() === '') {
       return NextResponse.json(
         { error: 'Search keywords are required' },
+        { status: 400 }
+      );
+    }
+
+    if (search_keywords.length > 500) {
+      return NextResponse.json(
+        { error: 'Search query is too long' },
         { status: 400 }
       );
     }
@@ -73,6 +80,13 @@ export async function POST(request: NextRequest) {
         );
       }
       quotaTypeToDeduct = 'monthly_quota';
+    }
+
+    // Hard-cap the limit to the user's actual remaining quota
+    if (quotaTypeToDeduct === 'free_searches_remaining' && limit > freeSearches) {
+      limit = freeSearches;
+    } else if (quotaTypeToDeduct === 'monthly_quota' && limit > monthlyQuota) {
+      limit = monthlyQuota;
     }
 
     // --- STEP 1: Smart Queue Check DB ---

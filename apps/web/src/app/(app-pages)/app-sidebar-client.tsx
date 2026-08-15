@@ -12,7 +12,7 @@ import {
 import { SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail } from "@/components/ui/sidebar";
 import { signOutAction } from "@/data/auth/sign-out";
 import { User } from "@supabase/supabase-js";
-import { ChevronUp, Home, Briefcase, Sliders, Settings, LogOut, Sparkles, Gauge } from "lucide-react";
+import { ChevronUp, Home, Briefcase, Sliders, Settings, LogOut, Sparkles, Gauge, List, TrendingUp, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTransition } from "react";
@@ -20,9 +20,19 @@ import { Progress } from "@/components/ui/progress";
 
 const navigationItems: { title: string; url: string; icon: React.ElementType }[] = [
   {
-    title: 'Dashboard',
+    title: 'Find Jobs',
     url: '/dashboard',
     icon: Home,
+  },
+  {
+    title: 'Job Matches',
+    url: '/job-matches',
+    icon: List,
+  },
+  {
+    title: 'AI Score Rules',
+    url: '/rules',
+    icon: Sliders,
   },
   {
     title: 'Profile & Search',
@@ -30,14 +40,9 @@ const navigationItems: { title: string; url: string; icon: React.ElementType }[]
     icon: Briefcase,
   },
   {
-    title: 'Job Matches',
-    url: '/job-matches',
-    icon: Briefcase,
-  },
-  {
-    title: 'Scoring Rules',
-    url: '/rules',
-    icon: Sliders,
+    title: 'Analytics',
+    url: '/analytics',
+    icon: TrendingUp,
   },
   {
     title: 'Settings',
@@ -50,9 +55,10 @@ interface AppSidebarContentProps {
   user: User;
   remainingQuota?: number;
   subscriptionStatus?: string;
+  role?: string;
 }
 
-export function AppSidebarContent({ user, remainingQuota = 500, subscriptionStatus = 'inactive' }: AppSidebarContentProps) {
+export function AppSidebarContent({ user, remainingQuota = 500, subscriptionStatus = 'inactive', role = 'user' }: AppSidebarContentProps) {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
@@ -173,6 +179,14 @@ export function AppSidebarContent({ user, remainingQuota = 500, subscriptionStat
                   Settings
                 </Link>
               </DropdownMenuItem>
+              {role === 'admin' && (
+                <DropdownMenuItem asChild>
+                  <Link href="/admin">
+                    <ShieldAlert className="mr-2 h-4 w-4 text-indigo-500" />
+                    Admin Dashboard
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} disabled={isPending}>
                 <LogOut className="mr-2 h-4 w-4" />

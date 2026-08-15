@@ -26,6 +26,10 @@ export interface JobMatch {
   is_remote: boolean | null;
   job_benefits: any | null;
   status: string | null;
+  matched_status?: 'approved' | 'rejected' | null;
+  application_status?: 'applied' | 'rejection' | 'ignored' | 'interview' | 'interview_2' | 'offer' | null;
+  application_date?: string | null;
+  user_notes?: string | null;
 }
 
 export function useRealtimeJobMatches(userId: string | null) {

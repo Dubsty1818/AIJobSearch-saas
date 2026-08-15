@@ -45,26 +45,27 @@ async function SidebarHeaderContent() {
 async function SidebarContentWrapper() {
   const { user } = await getCachedLoggedInVerifiedSupabaseUser();
 
-  // Fetch user profile for quota display
   let remainingQuota = 500;
   let subscriptionStatus = 'inactive';
+  let role = 'user';
   try {
     const supabase = await createSupabaseClient();
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('monthly_quota, free_searches_remaining, subscription_status')
+      .select('monthly_quota, free_searches_remaining, subscription_status, role')
       .eq('id', user.id)
       .single();
 
     if (profile) {
       subscriptionStatus = profile.subscription_status;
       remainingQuota = subscriptionStatus === 'active' ? profile.monthly_quota : (profile.free_searches_remaining || 0);
+      role = profile.role || 'user';
     }
   } catch {
     // Profile may not exist yet
   }
 
-  return <AppSidebarContent user={user} remainingQuota={remainingQuota} subscriptionStatus={subscriptionStatus} />
+  return <AppSidebarContent user={user} remainingQuota={remainingQuota} subscriptionStatus={subscriptionStatus} role={role} />
 }
 
 

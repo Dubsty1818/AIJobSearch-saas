@@ -8,7 +8,6 @@ import {
   getSortedRowModel,
   type ColumnDef,
   type SortingState,
-  type ColumnFiltersState,
   flexRender,
 } from '@tanstack/react-table';
 import {
@@ -21,30 +20,27 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+import { JobDetailsModal } from './JobDetailsModal';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowUpDown,
   ExternalLink,
   Search,
-  ChevronDown,
-  ChevronUp,
-  Filter,
   Loader2,
   Clock,
   Sparkles,
+  Check,
+  X
 } from 'lucide-react';
 import type { JobMatch } from '@/hooks/useRealtimeJobMatches';
+import { motion, AnimatePresence } from 'framer-motion';
+import { createClient } from '@/supabase-clients/client';
 
 interface JobMatchesTableProps {
   matches: JobMatch[];
@@ -54,7 +50,7 @@ interface JobMatchesTableProps {
 function ScoreBadge({ score, status }: { score: number | null, status?: string | null }) {
   if (status === 'processing') {
     return (
-      <span className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 ring-1 ring-inset ring-indigo-500/20">
+      <span className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-400 ring-1 ring-inset ring-indigo-500/20">
         <Loader2 className="w-3 h-3 mr-1 animate-spin" /> AI Analyzing
       </span>
     );
@@ -62,7 +58,7 @@ function ScoreBadge({ score, status }: { score: number | null, status?: string |
   
   if (status === 'pending' || score === -1 || score === null) {
     return (
-      <span className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 ring-1 ring-inset ring-gray-500/20">
+      <span className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-900/60 dark:text-gray-400 ring-1 ring-inset ring-gray-500/20">
         <Clock className="w-3 h-3 mr-1" /> In Queue
       </span>
     );
@@ -97,6 +93,48 @@ export function JobMatchesTable({ matches, newMatchIds }: JobMatchesTableProps) 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [selectedMatch, setSelectedMatch] = useState<JobMatch | null>(null);
+  const [tabFilter, setTabFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [actioningIds, setActioningIds] = useState<Set<string>>(new Set());
+  
+  // Local state to eagerly remove rows on match/reject
+  const [localMatches, setLocalMatches] = useState<JobMatch[]>(matches);
+
+  // Sync localMatches when matches props change, but respect our optimistic updates
+  useMemo(() => {
+    setLocalMatches(matches);
+  }, [matches]);
+
+  const handleAction = async (e: React.MouseEvent, job: JobMatch, action: 'approved' | 'rejected') => {
+    e.stopPropagation();
+    if (actioningIds.has(job.id)) return;
+    
+    setActioningIds(prev => new Set(prev).add(job.id));
+    
+    setTimeout(async () => {
+      // Optimistic UI update
+      setLocalMatches(prev => prev.map(m => m.id === job.id ? { ...m, matched_status: action } : m));
+      if (selectedMatch?.id === job.id) {
+        setSelectedMatch(null);
+      }
+      
+      // DB Update
+      const supabase = createClient();
+      await supabase.from('job_matches').update({ matched_status: action }).eq('id', job.id);
+      
+      setActioningIds(prev => {
+        const next = new Set(prev);
+        next.delete(job.id);
+        return next;
+      });
+    }, 300);
+  };
+
+  const filteredMatches = useMemo(() => {
+    return localMatches.filter(m => {
+      if (tabFilter === 'pending') return !m.matched_status;
+      return m.matched_status === tabFilter;
+    });
+  }, [localMatches, tabFilter]);
 
   const columns = useMemo<ColumnDef<JobMatch>[]>(
     () => [
@@ -183,21 +221,6 @@ export function JobMatchesTable({ matches, newMatchIds }: JobMatchesTableProps) 
         ),
       },
       {
-        accessorKey: 'analysis',
-        header: () => (
-          <div className="flex items-center gap-1 font-semibold">
-            Analysis <Sparkles className="h-2.5 w-2.5 text-indigo-400/40 dark:text-indigo-600/40" />
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground line-clamp-2 max-w-[250px]">
-            {row.original.status === 'processing' ? (
-              <span className="flex items-center text-indigo-500/70"><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Analyzing...</span>
-            ) : row.getValue('analysis')}
-          </div>
-        ),
-      },
-      {
         accessorKey: 'location',
         header: 'Location',
         cell: ({ row }) => (
@@ -207,24 +230,42 @@ export function JobMatchesTable({ matches, newMatchIds }: JobMatchesTableProps) 
         ),
       },
       {
-        accessorKey: 'expected_salary',
-        header: 'Salary',
+        id: 'match_action',
+        header: 'Match Action',
         cell: ({ row }) => (
-          <span className="text-sm font-medium whitespace-nowrap">
-            {row.getValue('expected_salary') || '—'}
-          </span>
-        ),
-      },
-      {
-        id: 'actions',
-        header: '',
-        cell: ({ row }) => (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            {row.original.matched_status ? (
+              <span className="text-xs font-semibold capitalize px-2 py-1 bg-muted rounded">
+                {row.original.matched_status}
+              </span>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={actioningIds.has(row.original.id)}
+                  className="h-8 w-8 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  onClick={(e) => handleAction(e, row.original, 'approved')}
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={actioningIds.has(row.original.id)}
+                  className="h-8 w-8 rounded-full bg-red-500/10 hover:bg-red-500/20 border-red-500/20 text-red-600 dark:text-red-400"
+                  onClick={(e) => handleAction(e, row.original, 'rejected')}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            
             {row.original.url && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 ml-2"
                 asChild
               >
                 <a
@@ -241,11 +282,11 @@ export function JobMatchesTable({ matches, newMatchIds }: JobMatchesTableProps) 
         ),
       },
     ],
-    []
+    [localMatches]
   );
 
   const table = useReactTable({
-    data: matches,
+    data: filteredMatches,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
@@ -257,32 +298,47 @@ export function JobMatchesTable({ matches, newMatchIds }: JobMatchesTableProps) 
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Search & filter bar */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search all columns..."
-              value={globalFilter ?? ''}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-9"
-            />
+        <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <Tabs value={tabFilter} onValueChange={(val: any) => setTabFilter(val)} className="w-full sm:w-auto">
+              <TabsList>
+                <TabsTrigger value="pending">Pending ({localMatches.filter(m => !m.matched_status).length})</TabsTrigger>
+                <TabsTrigger value="approved">Approved ({localMatches.filter(m => m.matched_status === 'approved').length})</TabsTrigger>
+                <TabsTrigger value="rejected">Rejected ({localMatches.filter(m => m.matched_status === 'rejected').length})</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline-block">
+              {table.getFilteredRowModel().rows.length} results
+            </span>
           </div>
-          <span className="text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} results
-          </span>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search jobs..."
+                value={globalFilter ?? ''}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="pl-9 bg-card"
+              />
+            </div>
+            <span className="text-sm text-muted-foreground whitespace-nowrap sm:hidden">
+              {table.getFilteredRowModel().rows.length} results
+            </span>
+          </div>
         </div>
 
         {/* Table */}
-        <div className="rounded-lg border w-full overflow-x-auto">
+        <div className="rounded-lg border bg-card w-full overflow-x-auto">
           <div className="min-w-[800px]">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="bg-muted/50">
+                  <TableRow key={headerGroup.id} className="bg-muted/50 hover:bg-muted/50 border-b-0">
                     {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className="text-xs uppercase tracking-wider">
+                      <TableHead key={header.id} className="text-xs uppercase tracking-wider h-10">
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -295,150 +351,70 @@ export function JobMatchesTable({ matches, newMatchIds }: JobMatchesTableProps) 
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows.length > 0 ? (
-                  table.getRowModel().rows.map((row) => {
-                    const isNew = newMatchIds.has(row.original.id);
-                    return (
-                      <TableRow
-                        key={row.id}
-                        onClick={() => setSelectedMatch(row.original)}
-                        className={`cursor-pointer transition-all duration-500 ${
-                          isNew
-                            ? 'bg-indigo-50/80 dark:bg-indigo-950/30 animate-in slide-in-from-top-2'
-                            : 'hover:bg-muted/50'
-                        }`}
+                <AnimatePresence initial={false}>
+                  {table.getRowModel().rows.length > 0 ? (
+                    table.getRowModel().rows.map((row) => {
+                      const isNew = newMatchIds.has(row.original.id);
+                      return (
+                        <motion.tr
+                          key={row.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                          onClick={() => setSelectedMatch(row.original)}
+                          className={`border-b transition-colors cursor-pointer group ${
+                            isNew
+                              ? 'bg-indigo-50/80 dark:bg-indigo-950/30'
+                              : 'hover:bg-muted/50'
+                          } ${actioningIds.has(row.original.id) ? 'opacity-50 pointer-events-none' : ''}`}
+                        >
+                          {row.getVisibleCells().map((cell) => {
+                            const isScoreCell = cell.column.id === 'score';
+                            return (
+                              <TableCell 
+                                key={cell.id} 
+                                className={isScoreCell ? `p-0 w-[100px] h-full align-middle text-center ${getScoreBgClass(row.original.score, row.original.status)}` : "py-4"}
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            );
+                          })}
+                        </motion.tr>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-32 text-center text-muted-foreground"
                       >
-                        {row.getVisibleCells().map((cell) => {
-                          const isScoreCell = cell.column.id === 'score';
-                          return (
-                            <TableCell 
-                              key={cell.id} 
-                              className={isScoreCell ? `p-0 w-[100px] h-full align-middle text-center ${getScoreBgClass(row.original.score, row.original.status)}` : "py-3 h-[72px]"}
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-32 text-center text-muted-foreground"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Search className="h-8 w-8 opacity-30" />
-                        <p>No job matches yet. Run a search to get started!</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
+                        <div className="flex flex-col items-center gap-2">
+                          <Search className="h-8 w-8 opacity-30" />
+                          <p>No job matches in this queue.</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </AnimatePresence>
               </TableBody>
             </Table>
           </div>
         </div>
       </div>
 
-      {/* Detail Sheet */}
-      <Sheet open={!!selectedMatch} onOpenChange={(open) => !open && setSelectedMatch(null)}>
-        <SheetContent className="sm:max-w-xl md:max-w-2xl overflow-y-auto">
-          {selectedMatch && (
-            <>
-              <SheetHeader>
-                <div className="flex items-start justify-between gap-4 mt-4">
-                  <div>
-                    <SheetTitle className="text-xl">
-                      {selectedMatch.job_title}
-                    </SheetTitle>
-                    <p className="text-muted-foreground mt-1">
-                      {selectedMatch.company_name}
-                    </p>
-                  </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <ScoreBadge score={selectedMatch.score} status={selectedMatch.status} />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Total Match Score</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </SheetHeader>
-
-              <div className="space-y-6 mt-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted/30 p-3 rounded-lg border">
-                    <h5 className="text-xs font-semibold text-muted-foreground mb-1">Location</h5>
-                    <p className="text-sm font-medium">{selectedMatch.location || 'Not specified'}</p>
-                  </div>
-                  <div className="bg-muted/30 p-3 rounded-lg border">
-                    <h5 className="text-xs font-semibold text-muted-foreground mb-1">Expected Salary</h5>
-                    <p className="text-sm font-medium">{selectedMatch.expected_salary || 'Not specified'}</p>
-                  </div>
-                </div>
-
-                {selectedMatch.status === 'processing' ? (
-                  <div className="py-4 flex flex-col items-center justify-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
-                    <Loader2 className="w-8 h-8 animate-spin mb-2 opacity-50" />
-                    <p className="text-sm">AI is currently analyzing this job...</p>
-                  </div>
-                ) : (
-                  <>
-                    {selectedMatch.reasoning && (
-                      <div>
-                        <h4 className="font-semibold text-sm mb-2 text-primary">AI Reasoning</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {selectedMatch.reasoning}
-                        </p>
-                      </div>
-                    )}
-
-                    {selectedMatch.analysis && (
-                      <div>
-                        <h4 className="font-semibold text-sm mb-2 text-primary">Storyline / Analysis</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {selectedMatch.analysis}
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {selectedMatch.job_description && (
-                  <div>
-                    <h4 className="font-semibold text-sm mb-2">Job Description</h4>
-                    <div className="text-sm text-muted-foreground leading-relaxed bg-muted/50 rounded-lg p-4 max-h-[400px] overflow-y-auto whitespace-pre-wrap">
-                      {selectedMatch.job_description}
-                    </div>
-                  </div>
-                )}
-
-                {selectedMatch.url && (
-                  <div className="pt-4 pb-8">
-                    <Button asChild className="w-full">
-                      <a
-                        href={selectedMatch.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View Original Posting
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <JobDetailsModal 
+        job={selectedMatch} 
+        isOpen={!!selectedMatch} 
+        onClose={() => setSelectedMatch(null)}
+        isEditable={false}
+        onStatusChange={(jobId, newStatus) => {
+          setLocalMatches(prev => prev.map(m => m.id === jobId ? { ...m, matched_status: newStatus === 'pending' ? null : newStatus } : m));
+        }}
+      />
     </>
   );
 }

@@ -25,7 +25,7 @@ import { KeywordsStep } from './KeywordsStep';
 import { toast } from 'sonner';
 import type { Rule } from '@/components/rules/RulesConfigurator';
 import { WizardProvider, useWizard } from './WizardContext';
-import { updateCvTextAction, updateTargetKeywordsAction, updateCustomRulesAction, markSetupCompleteAction } from '@/data/user/profile';
+import { updateCvTextAction, updateTargetKeywordsAction, updateCustomRulesAction, markSetupCompleteAction, incrementDailyMetricAction } from '@/data/user/profile';
 
 interface UserProfile {
   id: string;
@@ -35,6 +35,7 @@ interface UserProfile {
   subscription_status: string;
   setup_completed: boolean;
   monthly_quota: number;
+  max_score_limit?: number;
 }
 
 interface SetupWizardProps {
@@ -67,7 +68,7 @@ function WizardContent({ profile, onComplete, initialStep, setIsOpen, showCloseB
         const positiveSum = rules
           .filter((r: Rule) => r.value > 0)
           .reduce((sum: number, r: Rule) => sum + r.value, 0);
-        return positiveSum === 10;
+        return positiveSum === (profile.max_score_limit || 10);
       }
       case 3:
         // Free trial (default) or active subscription counts as complete
@@ -97,6 +98,7 @@ function WizardContent({ profile, onComplete, initialStep, setIsOpen, showCloseB
       await updateCustomRulesAction({ rules: state.rules });
       
       await markSetupCompleteAction({});
+      await incrementDailyMetricAction({ metricName: 'wizard_completions' }).catch(() => null);
       toast.success('Setup complete! Welcome to JobMatchAI 🎉');
       setIsOpen(false);
       onComplete();
@@ -251,7 +253,8 @@ export function SetupWizard({
       {!isOpen && !profile.setup_completed && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-xl shadow-indigo-500/30 animate-in slide-in-from-bottom-4 duration-500"
+          variant="gradient"
+          className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 duration-500 shadow-xl shadow-indigo-500/30"
         >
           <Sparkles className="h-4 w-4 mr-2" />
           Complete Setup

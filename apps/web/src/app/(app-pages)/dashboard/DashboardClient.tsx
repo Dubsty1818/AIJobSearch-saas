@@ -9,7 +9,7 @@ import { SearchProgressTracker, type SearchProgressData } from '@/components/das
 import { Loader2, Wifi, WifiOff, BarChart3, TrendingUp, Target } from 'lucide-react';
 import type { Rule } from '@/components/rules/RulesConfigurator';
 import { createClient } from '@/supabase-clients/client';
-import { useTranslations } from 'next-intl';
+
 
 interface UserProfile {
   id: string;
@@ -33,7 +33,6 @@ export function DashboardClientPage({
   searchHistory,
   initialSetupStep,
 }: DashboardClientPageProps) {
-  const t = useTranslations('Dashboard');
   const [profile, setProfile] = useState(initialProfile);
   const [searchProgress, setSearchProgress] = useState<SearchProgressData>({
     phase: 'idle',
@@ -162,9 +161,9 @@ export function DashboardClientPage({
       {/* Dashboard Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground text-sm">
-            {t('subtitle')}
+            Manage your job searches and view real-time matches.
           </p>
         </div>
 
@@ -173,12 +172,12 @@ export function DashboardClientPage({
           {isConnected ? (
             <span className="flex items-center gap-1.5 text-xs text-emerald-500">
               <Wifi className="h-3.5 w-3.5" />
-              {t('live')}
+              Live
             </span>
           ) : (
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <WifiOff className="h-3.5 w-3.5" />
-              {t('connecting')}
+              Connecting...
             </span>
           )}
         </div>
@@ -186,16 +185,16 @@ export function DashboardClientPage({
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 p-5 flex items-center gap-4">
+        <div className="rounded-xl border shadow-sm bg-card p-5 flex items-center gap-4">
           <div className="h-10 w-10 rounded-lg bg-indigo-100 dark:bg-indigo-950/40 flex items-center justify-center">
             <BarChart3 className="h-5 w-5 text-indigo-500" />
           </div>
           <div>
             <p className="text-2xl font-bold">{matches.length}</p>
-            <p className="text-xs text-muted-foreground">{t('totalMatches')}</p>
+            <p className="text-xs text-muted-foreground">Total Matches</p>
           </div>
         </div>
-        <div className="rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 p-5 flex items-center gap-4">
+        <div className="rounded-xl border shadow-sm bg-card p-5 flex items-center gap-4">
           <div className="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
             <TrendingUp className="h-5 w-5 text-emerald-500" />
           </div>
@@ -205,16 +204,16 @@ export function DashboardClientPage({
                 ? (matches.filter(m => m.score !== null).reduce((s, m) => s + (m.score || 0), 0) / matches.filter(m => m.score !== null).length).toFixed(1)
                 : '—'}
             </p>
-            <p className="text-xs text-muted-foreground">{t('avgScore')}</p>
+            <p className="text-xs text-muted-foreground">Avg Score</p>
           </div>
         </div>
-        <div className="rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 p-5 flex items-center gap-4">
+        <div className="rounded-xl border shadow-sm bg-card p-5 flex items-center gap-4">
           <div className="h-10 w-10 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
             <Target className="h-5 w-5 text-violet-500" />
           </div>
           <div>
             <p className="text-2xl font-bold">{remainingQuota}</p>
-            <p className="text-xs text-muted-foreground">{isPro ? t('monthlyQuotaLeft') : t('freeSearchesLeft')}</p>
+            <p className="text-xs text-muted-foreground">{isPro ? 'Monthly Quota Left' : 'Free Searches Left'}</p>
           </div>
         </div>
       </div>

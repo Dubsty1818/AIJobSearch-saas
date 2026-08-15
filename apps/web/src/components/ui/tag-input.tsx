@@ -86,24 +86,16 @@ export function TagInput({ value, onChange, suggestions = [], className, placeho
             <Sparkles className="h-3.5 w-3.5 mr-1 text-indigo-500" />
             Suggested:
           </span>
-          {suggestions.map((suggestion, i) => {
-            const isSelected = tags.some(t => t.toLowerCase() === suggestion.toLowerCase());
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => !isSelected && addTag(suggestion)}
-                className={cn(
-                  "px-2 py-1 rounded-md border transition-all duration-200",
-                  isSelected 
-                    ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed border-transparent" 
-                    : "bg-background hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 dark:hover:text-indigo-300 cursor-pointer"
-                )}
-              >
-                {suggestion}
-              </button>
-            );
-          })}
+          {suggestions.filter(s => !tags.some(t => t.toLowerCase() === s.toLowerCase())).map((suggestion, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => addTag(suggestion)}
+              className="px-2 py-1 rounded-md border transition-all duration-200 bg-background hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 dark:hover:text-indigo-300 cursor-pointer"
+            >
+              {suggestion}
+            </button>
+          ))}
         </div>
       )}
     </div>
