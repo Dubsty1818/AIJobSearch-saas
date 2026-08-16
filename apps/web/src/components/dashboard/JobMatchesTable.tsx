@@ -47,7 +47,7 @@ interface JobMatchesTableProps {
   newMatchIds: Set<string>;
 }
 
-function ScoreBadge({ score, status }: { score: number | null, status?: string | null }) {
+function ScoreBadge({ score, status, scoreMax }: { score: number | null, status?: string | null, scoreMax?: number | null }) {
   if (status === 'processing') {
     return (
       <span className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-400 ring-1 ring-inset ring-indigo-500/20">
@@ -76,7 +76,7 @@ function ScoreBadge({ score, status }: { score: number | null, status?: string |
     <span
       className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${getColor(score)}`}
     >
-      {score}/10
+      {score}/{scoreMax || 10}
     </span>
   );
 }
@@ -200,7 +200,7 @@ export function JobMatchesTable({ matches, newMatchIds }: JobMatchesTableProps) 
           const score = row.getValue('score') as number | null;
           return (
             <div className="flex h-full w-full items-center justify-center">
-              <span className="font-bold text-base">{score !== null ? `${score}/10` : 'N/A'}</span>
+              <span className="font-bold text-base">{score !== null ? `${score}/${row.original.score_max || 10}` : 'N/A'}</span>
             </div>
           );
         },

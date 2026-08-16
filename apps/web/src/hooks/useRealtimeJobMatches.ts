@@ -9,6 +9,7 @@ export interface JobMatch {
   company_name: string;
   job_title: string;
   score: number | null;
+  score_max: number | null;
   reasoning: string | null;
   analysis: string | null;
   job_description: string;

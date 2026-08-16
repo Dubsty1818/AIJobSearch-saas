@@ -212,7 +212,8 @@ export async function POST(request: NextRequest) {
             job_publisher: job.job_publisher || null,
             is_remote: job.job_is_remote || false,
             job_benefits: job.job_benefits || null,
-            status: 'pending'
+            status: 'pending',
+            score_max: maxScoreLimit
           })
           .select('*')
           .single();
@@ -250,7 +251,7 @@ export async function POST(request: NextRequest) {
         const job = jobsToProcess[i];
 
         try {
-          const systemPrompt = `You're an intelligent bot rating how closely a job listing is to a candidates skill set, on a score of ${maxScoreLimit}. Please add up all the points and create a total out of ${maxScoreLimit}.
+          const systemPrompt = `You are scoring this job out of a maximum of ${maxScoreLimit} points. Ensure your final score does not exceed this. Please add up all the points and create a total out of ${maxScoreLimit}.
 
 Here are the user's custom scoring rules:
 ${rules.map((r, idx) => `${String.fromCharCode(97 + idx)}) ${r.value > 0 ? '+' : ''}${r.value} points: ${r.text}`).join('\n')}

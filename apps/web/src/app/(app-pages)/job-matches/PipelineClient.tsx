@@ -160,7 +160,7 @@ export function PipelineClient({ userId }: PipelineClientProps) {
           </Button>
         ),
         cell: ({ row }) => (
-          <span className="font-bold">{row.getValue('score') !== null ? `${row.getValue('score')}/10` : 'N/A'}</span>
+          <span className="font-bold">{row.getValue('score') !== null ? `${row.getValue('score')}/${row.original.score_max || 10}` : 'N/A'}</span>
         ),
       },
       {

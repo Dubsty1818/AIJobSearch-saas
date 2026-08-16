@@ -191,7 +191,7 @@ export function DashboardClientPage({
           </div>
           <div>
             <p className="text-2xl font-bold">{matches.length}</p>
-            <p className="text-xs text-muted-foreground">Total Matches</p>
+            <p className="text-xs text-muted-foreground">Saved Jobs</p>
           </div>
         </div>
         <div className="rounded-xl border shadow-sm bg-card p-5 flex items-center gap-4">

@@ -181,7 +181,7 @@ export function JobDetailsModal({
 
             <div className="flex flex-col items-end">
                <div className="text-5xl font-black tabular-nums tracking-tighter">
-                 {job.score !== null ? `${job.score}/10` : 'N/A'}
+                 {job.score !== null ? `${job.score}/${job.score_max || 10}` : 'N/A'}
                </div>
                <div className="text-sm font-semibold uppercase tracking-widest mt-1 opacity-80">
                  AI Match Score

@@ -49,10 +49,11 @@ interface SortableRuleItemProps {
   index: number;
   updateRule: (index: number, field: keyof Rule, value: string | number) => void;
   removeRule: (index: number) => void;
+  commitRules: () => void;
   getValueLabel: (value: number) => string;
 }
 
-function SortableRuleItem({ rule, index, updateRule, removeRule, getValueLabel }: SortableRuleItemProps) {
+function SortableRuleItem({ rule, index, updateRule, removeRule, commitRules, getValueLabel }: SortableRuleItemProps) {
   const {
     attributes,
     listeners,
@@ -84,6 +85,7 @@ function SortableRuleItem({ rule, index, updateRule, removeRule, getValueLabel }
         <Textarea
           value={rule.text}
           onChange={(e) => updateRule(index, 'text', e.target.value)}
+          onBlur={commitRules}
           placeholder="Describe your rule..."
           className="text-sm min-h-[60px] resize-y bg-transparent"
         />
@@ -93,6 +95,7 @@ function SortableRuleItem({ rule, index, updateRule, removeRule, getValueLabel }
             <Slider
               value={[rule.value]}
               onValueChange={([val]) => updateRule(index, 'value', val)}
+              onValueCommit={commitRules}
               min={-10}
               max={10}
               step={1}
@@ -138,8 +141,9 @@ export function RulesConfigurator({
       : DEFAULT_RULES
   );
   
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isInitialMount = useRef(true);
+  const commitRules = useCallback((currentRules: Rule[]) => {
+    onRulesChange(currentRules);
+  }, [onRulesChange]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -156,22 +160,7 @@ export function RulesConfigurator({
     .reduce((sum, r) => sum + r.value, 0);
   const isValid = positiveSum === maxScoreLimit;
 
-  // Auto-save with debounce
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      onRulesChange(rules);
-    }, 1500);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [rules, onRulesChange]);
 
   const updateRule = useCallback((index: number, field: keyof Rule, value: string | number) => {
     setRules((prev) =>
@@ -182,12 +171,20 @@ export function RulesConfigurator({
   }, []);
 
   const removeRule = useCallback((index: number) => {
-    setRules((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    setRules((prev) => {
+      const newRules = prev.filter((_, i) => i !== index);
+      commitRules(newRules);
+      return newRules;
+    });
+  }, [commitRules]);
 
   const addRule = useCallback(() => {
-    setRules((prev) => [...prev, { id: `new-${Date.now()}`, text: '', value: 0 }]);
-  }, []);
+    setRules((prev) => {
+      const newRules = [...prev, { id: `new-${Date.now()}`, text: '', value: 0 }];
+      commitRules(newRules);
+      return newRules;
+    });
+  }, [commitRules]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -196,7 +193,9 @@ export function RulesConfigurator({
       setRules((items) => {
         const oldIndex = items.findIndex((i) => i.id === active.id);
         const newIndex = items.findIndex((i) => i.id === over?.id);
-        return arrayMove(items, oldIndex, newIndex);
+        const newRules = arrayMove(items, oldIndex, newIndex);
+        commitRules(newRules);
+        return newRules;
       });
     }
   };
@@ -294,6 +293,7 @@ export function RulesConfigurator({
                 index={index}
                 updateRule={updateRule}
                 removeRule={removeRule}
+                commitRules={() => commitRules(rules)}
                 getValueLabel={getValueLabel}
               />
             ))}

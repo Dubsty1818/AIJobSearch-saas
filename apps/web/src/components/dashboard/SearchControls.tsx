@@ -46,7 +46,8 @@ export function SearchControls({
   const [isSearching, setIsSearching] = useState(false);
 
   const [showHistory, setShowHistory] = useState(false);
-  const maxLimit = Math.max(0, remainingQuota - (remainingQuota % 10)); // e.g. 35 -> 30
+  const rawMaxLimit = Math.max(0, remainingQuota - (remainingQuota % 10)); // e.g. 35 -> 30
+  const maxLimit = Math.min(rawMaxLimit, 100);
 
   // Ensure limit does not exceed maxLimit if quota drops
   useEffect(() => {

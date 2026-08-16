@@ -28,6 +28,7 @@ export type Database = {
           platform: string
           reasoning: string | null
           score: number | null
+          score_max: number | null
           search_keywords: string
           url: string
           user_id: string
@@ -41,6 +42,10 @@ export type Database = {
           is_remote: boolean | null
           job_benefits: Json | null
           status: string | null
+          matched_status: 'approved' | 'rejected' | null
+          application_status: 'applied' | 'rejection' | 'ignored' | 'interview' | 'interview_2' | 'offer' | null
+          application_date: string | null
+          user_notes: string | null
         }
         Insert: {
           analysis?: string | null
@@ -55,6 +60,7 @@ export type Database = {
           platform?: string
           reasoning?: string | null
           score?: number | null
+          score_max?: number | null
           search_keywords?: string
           url?: string
           user_id: string
@@ -68,6 +74,10 @@ export type Database = {
           is_remote?: boolean | null
           job_benefits?: Json | null
           status?: string | null
+          matched_status?: 'approved' | 'rejected' | null
+          application_status?: 'applied' | 'rejection' | 'ignored' | 'interview' | 'interview_2' | 'offer' | null
+          application_date?: string | null
+          user_notes?: string | null
         }
         Update: {
           analysis?: string | null
@@ -82,6 +92,7 @@ export type Database = {
           platform?: string
           reasoning?: string | null
           score?: number | null
+          score_max?: number | null
           search_keywords?: string
           url?: string
           user_id?: string
@@ -95,6 +106,10 @@ export type Database = {
           is_remote?: boolean | null
           job_benefits?: Json | null
           status?: string | null
+          matched_status?: 'approved' | 'rejected' | null
+          application_status?: 'applied' | 'rejection' | 'ignored' | 'interview' | 'interview_2' | 'offer' | null
+          application_date?: string | null
+          user_notes?: string | null
         }
         Relationships: []
       }
